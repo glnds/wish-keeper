@@ -17,17 +17,33 @@ A Java-based REST API application for managing wishes and people through a Postg
 - No need for local Java, Maven, or PostgreSQL installation
 
 ### Option 2: Local Development
-- **Java**: JDK 8 or higher (configured for Java 16)
+- **Java**: JDK 17 or higher
 - **Maven**: 3.6+ for building and running
 - **PostgreSQL**: 9.5+ with database `webapp_db`
-- **Database Access**: User `geert` with appropriate permissions
+- **Database Credentials**: Must be provided via environment variables (see Configuration section)
 
 ## Quick Start
 
 ### Option A: Using Docker/Finch (Recommended)
 
-The easiest way to run the application is with Docker or AWS Finch:
+The easiest way to run the application is with Docker or AWS Finch.
 
+**First time setup:**
+
+1. Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and set a secure database password:
+```bash
+# Edit with your preferred editor
+nano .env
+# or
+vim .env
+```
+
+3. Start the containers:
 ```bash
 # Using Docker Compose
 docker compose up
@@ -38,7 +54,7 @@ finch compose up
 
 This will:
 - Build the Java application in a container
-- Start a PostgreSQL database container
+- Start a PostgreSQL database container with your credentials
 - Automatically initialize the database schema
 - Start the application on http://localhost:8000
 
@@ -315,32 +331,54 @@ The JAR will be created in `target/` directory.
 
 ### Database Configuration
 
-Database connection can be configured via environment variables:
+Database connection is configured via environment variables for security.
 
-| Environment Variable | Default Value | Description |
-|---------------------|---------------|-------------|
-| `DB_HOST` | `localhost` | PostgreSQL host |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_NAME` | `webapp_db` | Database name |
-| `DB_USER` | `geert` | Database user |
-| `DB_PASSWORD` | `gman` | Database password |
+| Environment Variable | Default Value | Required | Description |
+|---------------------|---------------|----------|-------------|
+| `DB_HOST` | `localhost` | No | PostgreSQL host |
+| `DB_PORT` | `5432` | No | PostgreSQL port |
+| `DB_NAME` | `webapp_db` | No | Database name |
+| `DB_USER` | - | **Yes** | Database user |
+| `DB_PASSWORD` | - | **Yes** | Database password |
 
-**For Docker/Finch:** Environment variables are automatically configured in `docker-compose.yml`
+**Important Security Notes:**
+- `DB_USER` and `DB_PASSWORD` are **required** and have no defaults
+- The application will fail to start if credentials are not provided
+- Never commit the `.env` file to version control (already in `.gitignore`)
+- Use strong passwords - generate with: `openssl rand -base64 32`
 
-**For Local Development:** Set environment variables before running:
+**For Docker/Finch:**
+
+1. Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and set your credentials:
+```bash
+DB_NAME=webapp_db
+DB_USER=wishkeeper
+DB_PASSWORD=your_secure_password_here
+```
+
+3. The `docker-compose.yml` automatically reads from `.env`
+
+**For Local Development:**
+
+Set environment variables before running:
 ```bash
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_NAME=webapp_db
-export DB_USER=geert
-export DB_PASSWORD=gman
+export DB_USER=your_username
+export DB_PASSWORD=your_password
 
 mvn exec:java
 ```
 
 Database connection implementation:
-- `WishStorePostgres.java` (lines 10-16)
-- `PeopleStorePostgres.java` (lines 12-18)
+- `WishStorePostgres.java` (lines 10-39)
+- `PeopleStorePostgres.java` (lines 12-41)
 
 ## Docker Deployment
 
@@ -422,22 +460,22 @@ finch compose up --build
 
 ### Customizing Configuration
 
-To use different database credentials, edit `docker-compose.yml`:
+Database credentials are configured via the `.env` file. Create or edit `.env`:
 
-```yaml
-services:
-  postgres:
-    environment:
-      POSTGRES_DB: your_database
-      POSTGRES_USER: your_user
-      POSTGRES_PASSWORD: your_password
-
-  app:
-    environment:
-      DB_NAME: your_database
-      DB_USER: your_user
-      DB_PASSWORD: your_password
+```bash
+# .env
+DB_NAME=your_database_name
+DB_USER=your_username
+DB_PASSWORD=your_secure_password
 ```
+
+The `docker-compose.yml` automatically uses these values through environment variable substitution.
+
+**Security Best Practices:**
+- Use a strong, randomly generated password
+- Never commit `.env` to version control
+- Use different credentials for development and production
+- Rotate passwords regularly
 
 ## API Examples
 

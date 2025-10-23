@@ -7,13 +7,36 @@ import java.util.Optional;
 
 public class WishStorePostgres {
 
-    // Database connection details from environment variables with defaults
-    private static final String DB_HOST = System.getenv().getOrDefault("DB_HOST", "localhost");
-    private static final String DB_PORT = System.getenv().getOrDefault("DB_PORT", "5432");
-    private static final String DB_NAME = System.getenv().getOrDefault("DB_NAME", "webapp_db");
-    private static final String DB_USER = System.getenv().getOrDefault("DB_USER", "geert");
-    private static final String DB_PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "gman");
+    // Database connection details from environment variables
+    // Sensitive credentials (user/password) must be provided via environment variables
+    private static final String DB_HOST = getEnvOrDefault("DB_HOST", "localhost");
+    private static final String DB_PORT = getEnvOrDefault("DB_PORT", "5432");
+    private static final String DB_NAME = getEnvOrDefault("DB_NAME", "webapp_db");
+    private static final String DB_USER = getRequiredEnv("DB_USER");
+    private static final String DB_PASSWORD = getRequiredEnv("DB_PASSWORD");
     private static final String DB_URL = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
+
+    /**
+     * Get environment variable with default fallback
+     */
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return (value != null && !value.trim().isEmpty()) ? value : defaultValue;
+    }
+
+    /**
+     * Get required environment variable, throw exception if not set
+     */
+    private static String getRequiredEnv(String key) {
+        String value = System.getenv(key);
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException(
+                String.format("Required environment variable '%s' is not set. " +
+                             "Please set database credentials via environment variables.", key)
+            );
+        }
+        return value;
+    }
 
     public void storeWish(Wish wish) {
         // Placeholder for storing the wish in a PostgreSQL database

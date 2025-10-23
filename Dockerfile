@@ -28,12 +28,9 @@ COPY --from=builder /app/target/*.jar app.jar
 # Expose the application port
 EXPOSE 8000
 
-# Set environment variables for database connection
-ENV DB_HOST=postgres
-ENV DB_PORT=5432
-ENV DB_NAME=webapp_db
-ENV DB_USER=geert
-ENV DB_PASSWORD=gman
+# Environment variables for database connection will be provided by docker-compose.yml
+# Required: DB_USER, DB_PASSWORD
+# Optional (with defaults): DB_HOST, DB_PORT, DB_NAME
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -8,7 +8,7 @@ This is a Java-based REST API application called "Wish Keeper" that manages wish
 
 ## Build System
 
-This project uses **Maven** as its build system with Java 16 as the target version.
+This project uses **Maven** as its build system with Java 17 as the target version.
 
 ### Key Commands
 
@@ -74,10 +74,19 @@ The application follows a simple layered architecture:
 
 ### Database Configuration
 
-The application connects to PostgreSQL with:
-- URL: `jdbc:postgresql://localhost:5432/webapp_db`
-- User: `geert`
-- Password: `gman`
+The application connects to PostgreSQL using environment variables for security:
+- **Required Environment Variables:**
+  - `DB_USER` - Database username (no default, must be set)
+  - `DB_PASSWORD` - Database password (no default, must be set)
+- **Optional Environment Variables (with defaults):**
+  - `DB_HOST` - Database host (default: `localhost`)
+  - `DB_PORT` - Database port (default: `5432`)
+  - `DB_NAME` - Database name (default: `webapp_db`)
+
+**For Docker/Finch:** Create a `.env` file from `.env.example` and set credentials
+**For Local Development:** Export environment variables before running `mvn exec:java`
+
+The application will fail to start if `DB_USER` or `DB_PASSWORD` are not provided.
 
 ### Business Rules
 

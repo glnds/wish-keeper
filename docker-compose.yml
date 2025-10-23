@@ -5,10 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: wish-keeper-db
     environment:
-      POSTGRES_DB: webapp_db
-      POSTGRES_USER: geert
-      POSTGRES_PASSWORD: gman
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: ${DB_NAME:-webapp_db}
+      POSTGRES_USER: ${DB_USER:-wishkeeper}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password must be set in .env file}
     ports:
       - "5432:5432"
     volumes:
@@ -18,7 +17,7 @@ services:
     networks:
       - wish-keeper-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U geert -d webapp_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-wishkeeper} -d ${DB_NAME:-webapp_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,9 +30,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: webapp_db
-      DB_USER: geert
-      DB_PASSWORD: gman
+      DB_NAME: ${DB_NAME:-webapp_db}
+      DB_USER: ${DB_USER:-wishkeeper}
+      DB_PASSWORD: ${DB_PASSWORD:?Database password must be set in .env file}
     ports:
       - "8000:8000"
     depends_on:
