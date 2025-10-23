@@ -1,0 +1,642 @@
+{
+	"info": {
+		"_postman_id": "wish-keeper-api-collection",
+		"name": "Wish Keeper API",
+		"description": "Complete API collection for the Wish Keeper REST API - manages wishes and people with PostgreSQL backend.\n\n## Base URL\nDefault: http://localhost:8000\n\n## Features\n- Health check endpoint\n- Wish management (CRUD)\n- People management with optimistic locking\n- Wish replacement\n- Wish fulfillment with proof-of-work\n\n## Authentication\nNo authentication required (development API)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Hello World",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hello",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"hello"
+							]
+						},
+						"description": "Simple health check endpoint that returns \"Hello, World!\""
+					},
+					"response": []
+				}
+			],
+			"description": "Health check and status endpoints"
+		},
+		{
+			"name": "Wishes",
+			"item": [
+				{
+					"name": "Get All Wishes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Retrieve all wishes from the database"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - Valid",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish001\",\n  \"productName\": \"Red Bicycle\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Create a new wish for a beneficiary.\n\nValidation:\n- Beneficiary must exist\n- Max 3 wishes per beneficiary\n- Product name cannot be empty\n- Quantity cannot be negative"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - GTA VI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish128\",\n  \"productName\": \"GTA VI\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Create a wish for GTA VI game"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - Laptop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish002\",\n  \"productName\": \"Laptop\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Create a wish for a laptop"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - Invalid (No Beneficiary)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish666\",\n  \"productName\": \"GTA VI\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 9999\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Attempt to create wish with non-existent beneficiary (should fail with 400)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - Empty Product Name",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish003\",\n  \"productName\": \"\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Attempt to create wish with empty product name (should fail with 400)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wish - Negative Quantity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish004\",\n  \"productName\": \"Toy Car\",\n  \"quantity\": -5,\n  \"beneficiaryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wish"
+							]
+						},
+						"description": "Attempt to create wish with negative quantity (should fail with 400)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing wishes (CRUD operations)"
+		},
+		{
+			"name": "Wish Replacement",
+			"item": [
+				{
+					"name": "Get All Wishes (Replace)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/wishreplace",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishreplace"
+							]
+						},
+						"description": "Get all wishes (replacement endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace Wish",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish999\",\n  \"productName\": \"Blue Bicycle\",\n  \"quantity\": 1,\n  \"beneficiaryId\": 1,\n  \"idOfWishToBeReplaced\": \"wish001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wishreplace",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishreplace"
+							]
+						},
+						"description": "Replace an existing wish with a new one.\n\nProcess:\n1. Verify beneficiary exists\n2. Find wish to be replaced\n3. Delete old wish\n4. Create new wish with new ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace Wish - Pencil for GTA VI",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish129\",\n  \"productName\": \"Pencil Set\",\n  \"quantity\": 10,\n  \"beneficiaryId\": 1,\n  \"idOfWishToBeReplaced\": \"wish128\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wishreplace",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishreplace"
+							]
+						},
+						"description": "Replace GTA VI wish with pencil set"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for replacing wishes"
+		},
+		{
+			"name": "People",
+			"item": [
+				{
+					"name": "Get All People",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Retrieve all people from the database"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - Valid",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"2010-05-15\",\n  \"addressLocation\": {\n    \"latitude\": 45.0,\n    \"longitude\": 0.0\n  },\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Register a new person.\n\nNote: Do not include `id`, `version`, or `timeOfRegistration` - these are auto-generated.\n\nBehavior values: \"nice\" or \"naughty\""
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - Brussels",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"dateOfBirth\": \"2012-08-20\",\n  \"addressLocation\": {\n    \"latitude\": 50.8503,\n    \"longitude\": 4.3517\n  },\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Register a person in Brussels, Belgium"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - South Pole",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Inhabitant\",\n  \"lastName\": \"Southpole\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"addressLocation\": {\n    \"latitude\": -90.0,\n    \"longitude\": 0.0\n  },\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Register a person at the South Pole (maximum distance from North Pole)"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - Naughty",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Naughty\",\n  \"lastName\": \"Child\",\n  \"dateOfBirth\": \"2015-12-24\",\n  \"addressLocation\": {\n    \"latitude\": 40.7128,\n    \"longitude\": -74.0060\n  },\n  \"behavior\": \"naughty\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Register a naughty person in New York"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - No Location",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"No\",\n  \"lastName\": \"Location\",\n  \"dateOfBirth\": \"2010-01-01\",\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Register a person without location (addressLocation is optional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Person - Invalid (with ID)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 99,\n  \"firstName\": \"Invalid\",\n  \"lastName\": \"Person\",\n  \"dateOfBirth\": \"2010-01-01\",\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Attempt to register person with ID (should fail with 400 - ID is auto-generated)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Person",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"version\": 1,\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"2010-05-15\",\n  \"addressLocation\": {\n    \"latitude\": 50.0,\n    \"longitude\": 5.0\n  },\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Update an existing person using optimistic locking.\n\nNote: Must provide correct `version` number. Version is incremented automatically on successful update.\n\nFails with 400 if version mismatch (optimistic lock conflict)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Person - Version Conflict",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"version\": 999,\n  \"firstName\": \"Should\",\n  \"lastName\": \"Fail\",\n  \"dateOfBirth\": \"2010-05-15\",\n  \"addressLocation\": {\n    \"latitude\": 50.0,\n    \"longitude\": 5.0\n  },\n  \"behavior\": \"nice\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/people",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"people"
+							]
+						},
+						"description": "Attempt to update with wrong version number (should fail with 400 - optimistic lock conflict)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing people (register, update, retrieve)"
+		},
+		{
+			"name": "Wish Fulfillment",
+			"item": [
+				{
+					"name": "Fulfill Wish - Near Location",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wishfulfill",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishfulfill"
+							]
+						},
+						"description": "Fulfill a wish using proof-of-work mining.\n\nProcess:\n1. Find wish by ID\n2. Get beneficiary's location\n3. Calculate distance to North Pole\n4. Set mining difficulty based on distance\n5. Brute force nonce to find valid hash\n6. Returns hash found message with duration\n\nNote: Can take significant time for distant locations (higher difficulty)"
+					},
+					"response": []
+				},
+				{
+					"name": "Fulfill Wish - South Pole (Hard)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"wish666\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/wishfulfill",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"wishfulfill"
+							]
+						},
+						"description": "Fulfill a wish for someone at the South Pole.\n\nWarning: This will be very CPU-intensive and take a long time due to maximum distance from North Pole resulting in highest difficulty."
+					},
+					"response": []
+				}
+			],
+			"description": "Proof-of-work based wish fulfillment endpoint"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
