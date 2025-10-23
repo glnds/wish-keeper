@@ -3,6 +3,9 @@
 .settings/
 target/
 
+# Environment variables with credentials
+.env
+
 # Compiled class file
 *.class
 

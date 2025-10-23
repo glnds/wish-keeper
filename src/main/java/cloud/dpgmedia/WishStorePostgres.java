@@ -6,17 +6,47 @@ import java.util.List;
 import java.util.Optional;
 
 public class WishStorePostgres {
+
+    // Database connection details from environment variables
+    // Password-less authentication using trust/peer auth with network isolation
+    private static final String DB_HOST = getEnvOrDefault("DB_HOST", "localhost");
+    private static final String DB_PORT = getEnvOrDefault("DB_PORT", "5432");
+    private static final String DB_NAME = getEnvOrDefault("DB_NAME", "webapp_db");
+    private static final String DB_USER = getEnvOrDefault("DB_USER", "wishkeeper");
+    private static final String DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
+    private static final String DB_URL = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
+
+    /**
+     * Get environment variable with default fallback
+     */
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return (value != null && !value.trim().isEmpty()) ? value : defaultValue;
+    }
+
+    /**
+     * Get database connection with or without password
+     * Supports password-less authentication (trust/peer auth)
+     */
+    private static Connection getConnection() throws SQLException {
+        if (DB_PASSWORD.isEmpty()) {
+            // Password-less authentication (trust/peer)
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty("user", DB_USER);
+            return DriverManager.getConnection(DB_URL, props);
+        } else {
+            // Traditional password authentication
+            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        }
+    }
+
     public void storeWish(Wish wish) {
         // Placeholder for storing the wish in a PostgreSQL database
         System.out.println("Storing wish in PostgreSQL: " + wish);
-        // Database connection details
-        String url = "jdbc:postgresql://localhost:5432/webapp_db";
-        String user = "geert";
-        String password = "gman";
 
         String sql = "INSERT INTO wishes (id, productName, quantity, beneficiaryId) VALUES (?, ?, ?, ?)";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values to the placeholders
@@ -35,16 +65,10 @@ public class WishStorePostgres {
 
     public List<Wish> getAllWishes() {
         System.out.println("Getting all wishes from Postgres");
-        // Database connection details
-        String url = "jdbc:postgresql://localhost:5432/webapp_db";
-        String user = "geert";
-        String password = "gman";
-
-        // string to get all wishes from postgress db of wishes table
 
         String sql = "SELECT * FROM wishes";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
 
             // Execute the raw SQL INSERT query
@@ -73,16 +97,10 @@ public class WishStorePostgres {
 
     public List<Wish> getWishesForBeneficiary(int beneficiaryId) {
         System.out.println("Getting wishes for beneficiaryId " + beneficiaryId + " from Postgres");
-        // Database connection details
-        String url = "jdbc:postgresql://localhost:5432/webapp_db";
-        String user = "geert";
-        String password = "gman";
-
-        // string to get all wishes from postgress db of wishes table
 
         String sql = "SELECT * FROM wishes WHERE beneficiaryId = ?";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values to the placeholders
@@ -113,14 +131,10 @@ public class WishStorePostgres {
     public void deleteWish(String id) {
         // Placeholder for deleting the wish from a PostgreSQL database
         System.out.println("Deleting wish with id " + id + " from PostgreSQL");
-        // Database connection details
-        String url = "jdbc:postgresql://localhost:5432/webapp_db";
-        String user = "geert";
-        String password = "gman";
 
         String sql = "DELETE FROM wishes WHERE id = ?";
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind the id value to the placeholder
@@ -137,12 +151,9 @@ public class WishStorePostgres {
     public Optional<Wish> getWish(String id) {
         // get wish from db for id id
         System.out.println("Getting wish with id " + id + " from PostgreSQL");
-        // Database connection details
-        String url = "jdbc:postgresql://localhost:5432/webapp_db";
-        String user = "geert";
-        String password = "gman";
+
         String sql = "SELECT * FROM wishes WHERE id = ?";
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind the id value to the placeholder

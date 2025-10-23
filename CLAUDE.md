@@ -8,7 +8,7 @@ This is a Java-based REST API application called "Wish Keeper" that manages wish
 
 ## Build System
 
-This project uses **Maven** as its build system with Java 16 as the target version.
+This project uses **Maven** as its build system with Java 17 as the target version.
 
 ### Key Commands
 
@@ -74,10 +74,34 @@ The application follows a simple layered architecture:
 
 ### Database Configuration
 
-The application connects to PostgreSQL with:
-- URL: `jdbc:postgresql://localhost:5432/webapp_db`
-- User: `geert`
-- Password: `gman`
+The application connects to PostgreSQL using **password-less authentication by default**.
+
+**Environment Variables (all optional with defaults):**
+  - `DB_HOST` - Database host (default: `localhost`)
+  - `DB_PORT` - Database port (default: `5432`)
+  - `DB_NAME` - Database name (default: `webapp_db`)
+  - `DB_USER` - Database username (default: `wishkeeper`)
+  - `DB_PASSWORD` - Database password (default: `""` - empty for password-less auth)
+
+**Authentication Methods:**
+- **Docker/Finch (Default):** Trust authentication with network isolation
+  - No password required
+  - Secured by container network isolation
+  - Just run `docker compose up` or `finch compose up`
+
+- **Local Development:** Trust or peer authentication
+  - No password required by default
+  - Configure PostgreSQL for trust authentication if needed
+
+- **Production (Optional):** Password authentication
+  - Set `DB_PASSWORD` environment variable
+  - Application supports both password and password-less modes
+
+**Security:** Password-less authentication is secure because:
+- Docker containers are isolated on a private network
+- Database is only accessible from the application container
+- No credentials to leak or manage
+- Simpler than password-based auth for containerized environments
 
 ### Business Rules
 

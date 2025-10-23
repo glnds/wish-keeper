@@ -12,14 +12,65 @@ A Java-based REST API application for managing wishes and people through a Postg
 
 ## Prerequisites
 
-- **Java**: JDK 8 or higher (configured for Java 16)
+### Option 1: Docker/Finch (Recommended)
+- **Docker** or **AWS Finch**: Container runtime for running the application
+- No need for local Java, Maven, or PostgreSQL installation
+
+### Option 2: Local Development
+- **Java**: JDK 17 or higher
 - **Maven**: 3.6+ for building and running
-- **PostgreSQL**: 9.5+ with database `webapp_db`
-- **Database Access**: User `geert` with appropriate permissions
+- **PostgreSQL**: 9.5+ with database `webapp_db` configured for trust or peer authentication
+- **No credentials needed**: Password-less authentication enabled by default
 
 ## Quick Start
 
-### 1. Database Setup
+### Option A: Using Docker/Finch (Recommended)
+
+The easiest way to run the application is with Docker or AWS Finch.
+
+**No setup required!** Just start the containers:
+
+```bash
+# Using Docker Compose
+docker compose up
+
+# Or using AWS Finch
+finch compose up
+```
+
+This will:
+- Build the Java application in a container
+- Start a PostgreSQL database container with **password-less authentication**
+- Automatically initialize the database schema
+- Start the application on http://localhost:8000
+
+**Security Note:** Password-less authentication is enabled using PostgreSQL's trust method with network isolation. This is secure because:
+- Containers communicate on an isolated private network
+- The database is only accessible from the application container
+- No credentials to leak or manage
+- Simpler and more secure than password-based auth for containerized environments
+
+To stop the containers:
+```bash
+# Using Docker
+docker compose down
+
+# Or using AWS Finch
+finch compose down
+```
+
+To rebuild after code changes:
+```bash
+# Using Docker
+docker compose up --build
+
+# Or using AWS Finch
+finch compose up --build
+```
+
+### Option B: Local Development
+
+#### 1. Database Setup
 
 Create the database and tables:
 
@@ -32,7 +83,7 @@ psql -d webapp_db -f src/main/resources/People.pgsql
 psql -d webapp_db -f src/main/resources/wishes.pgsql
 ```
 
-### 2. Build and Run
+#### 2. Build and Run
 
 ```bash
 # Build the project
@@ -229,12 +280,13 @@ src/
 
 ### Technology Stack
 
-- **Java**: Core language (Java 8/16)
+- **Java**: Core language (Java 17)
 - **HTTP Server**: Java's `com.sun.net.httpserver.HttpServer`
 - **JSON Processing**: Jackson Databind 2.20.0
 - **Database**: PostgreSQL 42.7.7 driver
 - **Testing**: JUnit 3.8.2
 - **Build Tool**: Maven 3.x
+- **Containerization**: Docker / AWS Finch
 
 ## Business Rules
 
@@ -272,16 +324,164 @@ The JAR will be created in `target/` directory.
 
 ### Database Configuration
 
-Database connection is configured in:
-- `WishStorePostgres.java` (lines 13-15)
-- `PeopleStorePostgres.java` (lines 12-14)
+Database connection is configured via environment variables. **Password-less authentication is enabled by default.**
 
-Default configuration:
+| Environment Variable | Default Value | Required | Description |
+|---------------------|---------------|----------|-------------|
+| `DB_HOST` | `localhost` | No | PostgreSQL host |
+| `DB_PORT` | `5432` | No | PostgreSQL port |
+| `DB_NAME` | `webapp_db` | No | Database name |
+| `DB_USER` | `wishkeeper` | No | Database user |
+| `DB_PASSWORD` | `""` (empty) | No | Database password (optional) |
+
+**Password-less Authentication (Default):**
+- No password required by default
+- Uses PostgreSQL trust authentication
+- Secured by network isolation (Docker) or peer authentication (local)
+- No credentials to manage or leak
+- Recommended for development and Docker environments
+
+**For Docker/Finch:**
+
+No configuration needed! The default settings work out of the box.
+
+**Optional:** To customize database name or user:
+1. Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
 ```
-URL: jdbc:postgresql://localhost:5432/webapp_db
-User: geert
-Password: gman
+
+2. Edit `.env` and uncomment/modify settings:
+```bash
+DB_NAME=webapp_db
+DB_USER=wishkeeper
+# DB_PASSWORD is optional - leave empty for password-less auth
 ```
+
+**For Local Development:**
+
+Set environment variables if needed (optional):
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=webapp_db
+export DB_USER=wishkeeper
+# No DB_PASSWORD needed for password-less auth
+
+mvn exec:java
+```
+
+**For Production with Passwords (Optional):**
+
+If you need password authentication:
+```bash
+export DB_USER=your_username
+export DB_PASSWORD=your_secure_password
+
+mvn exec:java
+```
+
+Database connection implementation:
+- `WishStorePostgres.java` (lines 10-41)
+- `PeopleStorePostgres.java` (lines 12-43)
+
+## Docker Deployment
+
+The application includes Docker support with a multi-stage build process:
+
+### Architecture
+
+```
+┌─────────────────────────────────────┐
+│  wish-keeper-app (Java Container)  │
+│  Port: 8000                         │
+│  Image: Built from Dockerfile      │
+└─────────────────┬───────────────────┘
+                  │
+                  │ Network: wish-keeper-network
+                  │
+┌─────────────────▼───────────────────┐
+│  wish-keeper-db (PostgreSQL)       │
+│  Port: 5432                         │
+│  Image: postgres:15-alpine         │
+│  Volume: postgres_data             │
+└─────────────────────────────────────┘
+```
+
+### Files
+
+- **`Dockerfile`**: Multi-stage build
+  - Stage 1: Maven build (maven:3.9-eclipse-temurin-17)
+  - Stage 2: Runtime (eclipse-temurin:17-jre-jammy)
+- **`docker-compose.yml`**: Orchestrates both containers with networking and volumes
+
+### Container Features
+
+- **Automatic Database Initialization**: SQL schemas mounted to `/docker-entrypoint-initdb.d/`
+- **Health Checks**: PostgreSQL health check ensures database is ready before app starts
+- **Persistent Data**: PostgreSQL data stored in named volume `postgres_data`
+- **Network Isolation**: Containers communicate on dedicated bridge network
+- **Environment Variables**: All database credentials configurable via environment
+
+### Docker Commands
+
+```bash
+# Start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+
+# Remove all data (including database volume)
+docker compose down -v
+
+# Rebuild and start
+docker compose up --build
+
+# Run tests (requires local Maven)
+mvn test
+```
+
+### AWS Finch Commands
+
+AWS Finch is a Docker-compatible container runtime. Commands are identical:
+
+```bash
+# Start all services
+finch compose up -d
+
+# View logs
+finch compose logs -f
+
+# Stop all services
+finch compose down
+
+# Rebuild and start
+finch compose up --build
+```
+
+### Customizing Configuration
+
+Database settings can optionally be configured via the `.env` file (optional for most use cases):
+
+```bash
+# .env (optional - defaults work out of the box)
+DB_NAME=webapp_db
+DB_USER=wishkeeper
+# DB_PASSWORD is optional - leave empty for password-less auth
+```
+
+The `docker-compose.yml` automatically uses these values through environment variable substitution.
+
+**Security Features:**
+- **Password-less by default**: Uses trust authentication with network isolation
+- **No credentials to leak**: Empty password works securely within Docker network
+- **Network isolated**: Database only accessible from app container
+- **Simple and secure**: Fewer secrets to manage
+- **Optional passwords**: Can still use password auth if needed for production
 
 ## API Examples
 
@@ -308,7 +508,6 @@ make test
 ## Known Limitations
 
 - Single-threaded HTTP server (no concurrent request handling)
-- Database credentials hardcoded in source code
 - No authentication or authorization
 - HTTP only (no HTTPS/TLS)
 - No rate limiting
