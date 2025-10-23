@@ -280,12 +280,13 @@ src/
 
 ### Technology Stack
 
-- **Java**: Core language (Java 8/16)
+- **Java**: Core language (Java 17)
 - **HTTP Server**: Java's `com.sun.net.httpserver.HttpServer`
 - **JSON Processing**: Jackson Databind 2.20.0
 - **Database**: PostgreSQL 42.7.7 driver
 - **Testing**: JUnit 3.8.2
 - **Build Tool**: Maven 3.x
+- **Containerization**: Docker / AWS Finch
 
 ## Business Rules
 
