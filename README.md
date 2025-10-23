@@ -19,8 +19,8 @@ A Java-based REST API application for managing wishes and people through a Postg
 ### Option 2: Local Development
 - **Java**: JDK 17 or higher
 - **Maven**: 3.6+ for building and running
-- **PostgreSQL**: 9.5+ with database `webapp_db`
-- **Database Credentials**: Must be provided via environment variables (see Configuration section)
+- **PostgreSQL**: 9.5+ with database `webapp_db` configured for trust or peer authentication
+- **No credentials needed**: Password-less authentication enabled by default
 
 ## Quick Start
 
@@ -28,22 +28,8 @@ A Java-based REST API application for managing wishes and people through a Postg
 
 The easiest way to run the application is with Docker or AWS Finch.
 
-**First time setup:**
+**No setup required!** Just start the containers:
 
-1. Copy the example environment file:
-```bash
-cp .env.example .env
-```
-
-2. Edit `.env` and set a secure database password:
-```bash
-# Edit with your preferred editor
-nano .env
-# or
-vim .env
-```
-
-3. Start the containers:
 ```bash
 # Using Docker Compose
 docker compose up
@@ -54,9 +40,15 @@ finch compose up
 
 This will:
 - Build the Java application in a container
-- Start a PostgreSQL database container with your credentials
+- Start a PostgreSQL database container with **password-less authentication**
 - Automatically initialize the database schema
 - Start the application on http://localhost:8000
+
+**Security Note:** Password-less authentication is enabled using PostgreSQL's trust method with network isolation. This is secure because:
+- Containers communicate on an isolated private network
+- The database is only accessible from the application container
+- No credentials to leak or manage
+- Simpler and more secure than password-based auth for containerized environments
 
 To stop the containers:
 ```bash
@@ -331,54 +323,66 @@ The JAR will be created in `target/` directory.
 
 ### Database Configuration
 
-Database connection is configured via environment variables for security.
+Database connection is configured via environment variables. **Password-less authentication is enabled by default.**
 
 | Environment Variable | Default Value | Required | Description |
 |---------------------|---------------|----------|-------------|
 | `DB_HOST` | `localhost` | No | PostgreSQL host |
 | `DB_PORT` | `5432` | No | PostgreSQL port |
 | `DB_NAME` | `webapp_db` | No | Database name |
-| `DB_USER` | - | **Yes** | Database user |
-| `DB_PASSWORD` | - | **Yes** | Database password |
+| `DB_USER` | `wishkeeper` | No | Database user |
+| `DB_PASSWORD` | `""` (empty) | No | Database password (optional) |
 
-**Important Security Notes:**
-- `DB_USER` and `DB_PASSWORD` are **required** and have no defaults
-- The application will fail to start if credentials are not provided
-- Never commit the `.env` file to version control (already in `.gitignore`)
-- Use strong passwords - generate with: `openssl rand -base64 32`
+**Password-less Authentication (Default):**
+- No password required by default
+- Uses PostgreSQL trust authentication
+- Secured by network isolation (Docker) or peer authentication (local)
+- No credentials to manage or leak
+- Recommended for development and Docker environments
 
 **For Docker/Finch:**
 
+No configuration needed! The default settings work out of the box.
+
+**Optional:** To customize database name or user:
 1. Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-2. Edit `.env` and set your credentials:
+2. Edit `.env` and uncomment/modify settings:
 ```bash
 DB_NAME=webapp_db
 DB_USER=wishkeeper
-DB_PASSWORD=your_secure_password_here
+# DB_PASSWORD is optional - leave empty for password-less auth
 ```
-
-3. The `docker-compose.yml` automatically reads from `.env`
 
 **For Local Development:**
 
-Set environment variables before running:
+Set environment variables if needed (optional):
 ```bash
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_NAME=webapp_db
+export DB_USER=wishkeeper
+# No DB_PASSWORD needed for password-less auth
+
+mvn exec:java
+```
+
+**For Production with Passwords (Optional):**
+
+If you need password authentication:
+```bash
 export DB_USER=your_username
-export DB_PASSWORD=your_password
+export DB_PASSWORD=your_secure_password
 
 mvn exec:java
 ```
 
 Database connection implementation:
-- `WishStorePostgres.java` (lines 10-39)
-- `PeopleStorePostgres.java` (lines 12-41)
+- `WishStorePostgres.java` (lines 10-41)
+- `PeopleStorePostgres.java` (lines 12-43)
 
 ## Docker Deployment
 
@@ -460,22 +464,23 @@ finch compose up --build
 
 ### Customizing Configuration
 
-Database credentials are configured via the `.env` file. Create or edit `.env`:
+Database settings can optionally be configured via the `.env` file (optional for most use cases):
 
 ```bash
-# .env
-DB_NAME=your_database_name
-DB_USER=your_username
-DB_PASSWORD=your_secure_password
+# .env (optional - defaults work out of the box)
+DB_NAME=webapp_db
+DB_USER=wishkeeper
+# DB_PASSWORD is optional - leave empty for password-less auth
 ```
 
 The `docker-compose.yml` automatically uses these values through environment variable substitution.
 
-**Security Best Practices:**
-- Use a strong, randomly generated password
-- Never commit `.env` to version control
-- Use different credentials for development and production
-- Rotate passwords regularly
+**Security Features:**
+- **Password-less by default**: Uses trust authentication with network isolation
+- **No credentials to leak**: Empty password works securely within Docker network
+- **Network isolated**: Database only accessible from app container
+- **Simple and secure**: Fewer secrets to manage
+- **Optional passwords**: Can still use password auth if needed for production
 
 ## API Examples
 

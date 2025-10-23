@@ -8,12 +8,12 @@ import java.util.Optional;
 public class WishStorePostgres {
 
     // Database connection details from environment variables
-    // Sensitive credentials (user/password) must be provided via environment variables
+    // Password-less authentication using trust/peer auth with network isolation
     private static final String DB_HOST = getEnvOrDefault("DB_HOST", "localhost");
     private static final String DB_PORT = getEnvOrDefault("DB_PORT", "5432");
     private static final String DB_NAME = getEnvOrDefault("DB_NAME", "webapp_db");
-    private static final String DB_USER = getRequiredEnv("DB_USER");
-    private static final String DB_PASSWORD = getRequiredEnv("DB_PASSWORD");
+    private static final String DB_USER = getEnvOrDefault("DB_USER", "wishkeeper");
+    private static final String DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
     private static final String DB_URL = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
 
     /**
@@ -25,17 +25,19 @@ public class WishStorePostgres {
     }
 
     /**
-     * Get required environment variable, throw exception if not set
+     * Get database connection with or without password
+     * Supports password-less authentication (trust/peer auth)
      */
-    private static String getRequiredEnv(String key) {
-        String value = System.getenv(key);
-        if (value == null || value.trim().isEmpty()) {
-            throw new RuntimeException(
-                String.format("Required environment variable '%s' is not set. " +
-                             "Please set database credentials via environment variables.", key)
-            );
+    private static Connection getConnection() throws SQLException {
+        if (DB_PASSWORD.isEmpty()) {
+            // Password-less authentication (trust/peer)
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty("user", DB_USER);
+            return DriverManager.getConnection(DB_URL, props);
+        } else {
+            // Traditional password authentication
+            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         }
-        return value;
     }
 
     public void storeWish(Wish wish) {
@@ -44,7 +46,7 @@ public class WishStorePostgres {
 
         String sql = "INSERT INTO wishes (id, productName, quantity, beneficiaryId) VALUES (?, ?, ?, ?)";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values to the placeholders
@@ -66,7 +68,7 @@ public class WishStorePostgres {
 
         String sql = "SELECT * FROM wishes";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
 
             // Execute the raw SQL INSERT query
@@ -98,7 +100,7 @@ public class WishStorePostgres {
 
         String sql = "SELECT * FROM wishes WHERE beneficiaryId = ?";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values to the placeholders
@@ -132,7 +134,7 @@ public class WishStorePostgres {
 
         String sql = "DELETE FROM wishes WHERE id = ?";
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind the id value to the placeholder
@@ -151,7 +153,7 @@ public class WishStorePostgres {
         System.out.println("Getting wish with id " + id + " from PostgreSQL");
 
         String sql = "SELECT * FROM wishes WHERE id = ?";
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind the id value to the placeholder

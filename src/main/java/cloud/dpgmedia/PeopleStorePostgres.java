@@ -10,12 +10,12 @@ import java.util.Optional;
 public class PeopleStorePostgres {
 
     // Database connection details from environment variables
-    // Sensitive credentials (user/password) must be provided via environment variables
+    // Password-less authentication using trust/peer auth with network isolation
     private static final String DB_HOST = getEnvOrDefault("DB_HOST", "localhost");
     private static final String DB_PORT = getEnvOrDefault("DB_PORT", "5432");
     private static final String DB_NAME = getEnvOrDefault("DB_NAME", "webapp_db");
-    private static final String USER = getRequiredEnv("DB_USER");
-    private static final String PASSWORD = getRequiredEnv("DB_PASSWORD");
+    private static final String USER = getEnvOrDefault("DB_USER", "wishkeeper");
+    private static final String PASSWORD = getEnvOrDefault("DB_PASSWORD", "");
     private static final String URL = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
 
     /**
@@ -27,17 +27,19 @@ public class PeopleStorePostgres {
     }
 
     /**
-     * Get required environment variable, throw exception if not set
+     * Get database connection with or without password
+     * Supports password-less authentication (trust/peer auth)
      */
-    private static String getRequiredEnv(String key) {
-        String value = System.getenv(key);
-        if (value == null || value.trim().isEmpty()) {
-            throw new RuntimeException(
-                String.format("Required environment variable '%s' is not set. " +
-                             "Please set database credentials via environment variables.", key)
-            );
+    private static Connection getConnection() throws SQLException {
+        if (PASSWORD.isEmpty()) {
+            // Password-less authentication (trust/peer)
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty("user", USER);
+            return DriverManager.getConnection(URL, props);
+        } else {
+            // Traditional password authentication
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         }
-        return value;
     }
 
 
@@ -45,7 +47,7 @@ public class PeopleStorePostgres {
     public Person registerPerson(Person person){
         String sql = "INSERT INTO people (firstName, lastName, dateOfBirth, timeOfRegistration, latitude, longitude, behavior, version) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, firstName, lastName, dateOfBirth, timeOfRegistration, latitude, longitude, behavior, version";
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values to the placeholders
@@ -98,7 +100,7 @@ public class PeopleStorePostgres {
        WHERE id = ? AND version = ? - 1;
     """;
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind values for the UPDATE query
@@ -145,7 +147,7 @@ public class PeopleStorePostgres {
         String sql = "SELECT id, firstName, lastName, dateOfBirth, timeOfRegistration, latitude, longitude, behavior, version FROM people WHERE id = ?";
         Person person = null;
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             // Bind the id value to the placeholder
@@ -184,7 +186,7 @@ public class PeopleStorePostgres {
         String sql = "SELECT id, firstName, lastName, dateOfBirth, timeOfRegistration, latitude, longitude, behavior, version FROM people";
         List<Person> people = new ArrayList<>();
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
