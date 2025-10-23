@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: wish-keeper-db
+    environment:
+      POSTGRES_DB: webapp_db
+      POSTGRES_USER: geert
+      POSTGRES_PASSWORD: gman
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/People.pgsql:/docker-entrypoint-initdb.d/01-people.sql
+      - ./src/main/resources/wishes.pgsql:/docker-entrypoint-initdb.d/02-wishes.sql
+    networks:
+      - wish-keeper-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geert -d webapp_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wish-keeper-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: webapp_db
+      DB_USER: geert
+      DB_PASSWORD: gman
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wish-keeper-network
+
+networks:
+  wish-keeper-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

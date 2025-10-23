@@ -12,6 +12,11 @@ A Java-based REST API application for managing wishes and people through a Postg
 
 ## Prerequisites
 
+### Option 1: Docker/Finch (Recommended)
+- **Docker** or **AWS Finch**: Container runtime for running the application
+- No need for local Java, Maven, or PostgreSQL installation
+
+### Option 2: Local Development
 - **Java**: JDK 8 or higher (configured for Java 16)
 - **Maven**: 3.6+ for building and running
 - **PostgreSQL**: 9.5+ with database `webapp_db`
@@ -19,7 +24,45 @@ A Java-based REST API application for managing wishes and people through a Postg
 
 ## Quick Start
 
-### 1. Database Setup
+### Option A: Using Docker/Finch (Recommended)
+
+The easiest way to run the application is with Docker or AWS Finch:
+
+```bash
+# Using Docker Compose
+docker compose up
+
+# Or using AWS Finch
+finch compose up
+```
+
+This will:
+- Build the Java application in a container
+- Start a PostgreSQL database container
+- Automatically initialize the database schema
+- Start the application on http://localhost:8000
+
+To stop the containers:
+```bash
+# Using Docker
+docker compose down
+
+# Or using AWS Finch
+finch compose down
+```
+
+To rebuild after code changes:
+```bash
+# Using Docker
+docker compose up --build
+
+# Or using AWS Finch
+finch compose up --build
+```
+
+### Option B: Local Development
+
+#### 1. Database Setup
 
 Create the database and tables:
 
@@ -32,7 +75,7 @@ psql -d webapp_db -f src/main/resources/People.pgsql
 psql -d webapp_db -f src/main/resources/wishes.pgsql
 ```
 
-### 2. Build and Run
+#### 2. Build and Run
 
 ```bash
 # Build the project
@@ -272,15 +315,128 @@ The JAR will be created in `target/` directory.
 
 ### Database Configuration
 
-Database connection is configured in:
-- `WishStorePostgres.java` (lines 13-15)
-- `PeopleStorePostgres.java` (lines 12-14)
+Database connection can be configured via environment variables:
 
-Default configuration:
+| Environment Variable | Default Value | Description |
+|---------------------|---------------|-------------|
+| `DB_HOST` | `localhost` | PostgreSQL host |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_NAME` | `webapp_db` | Database name |
+| `DB_USER` | `geert` | Database user |
+| `DB_PASSWORD` | `gman` | Database password |
+
+**For Docker/Finch:** Environment variables are automatically configured in `docker-compose.yml`
+
+**For Local Development:** Set environment variables before running:
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=webapp_db
+export DB_USER=geert
+export DB_PASSWORD=gman
+
+mvn exec:java
 ```
-URL: jdbc:postgresql://localhost:5432/webapp_db
-User: geert
-Password: gman
+
+Database connection implementation:
+- `WishStorePostgres.java` (lines 10-16)
+- `PeopleStorePostgres.java` (lines 12-18)
+
+## Docker Deployment
+
+The application includes Docker support with a multi-stage build process:
+
+### Architecture
+
+```
+┌─────────────────────────────────────┐
+│  wish-keeper-app (Java Container)  │
+│  Port: 8000                         │
+│  Image: Built from Dockerfile      │
+└─────────────────┬───────────────────┘
+                  │
+                  │ Network: wish-keeper-network
+                  │
+┌─────────────────▼───────────────────┐
+│  wish-keeper-db (PostgreSQL)       │
+│  Port: 5432                         │
+│  Image: postgres:15-alpine         │
+│  Volume: postgres_data             │
+└─────────────────────────────────────┘
+```
+
+### Files
+
+- **`Dockerfile`**: Multi-stage build
+  - Stage 1: Maven build (maven:3.9-eclipse-temurin-17)
+  - Stage 2: Runtime (eclipse-temurin:17-jre-jammy)
+- **`docker-compose.yml`**: Orchestrates both containers with networking and volumes
+
+### Container Features
+
+- **Automatic Database Initialization**: SQL schemas mounted to `/docker-entrypoint-initdb.d/`
+- **Health Checks**: PostgreSQL health check ensures database is ready before app starts
+- **Persistent Data**: PostgreSQL data stored in named volume `postgres_data`
+- **Network Isolation**: Containers communicate on dedicated bridge network
+- **Environment Variables**: All database credentials configurable via environment
+
+### Docker Commands
+
+```bash
+# Start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+
+# Remove all data (including database volume)
+docker compose down -v
+
+# Rebuild and start
+docker compose up --build
+
+# Run tests (requires local Maven)
+mvn test
+```
+
+### AWS Finch Commands
+
+AWS Finch is a Docker-compatible container runtime. Commands are identical:
+
+```bash
+# Start all services
+finch compose up -d
+
+# View logs
+finch compose logs -f
+
+# Stop all services
+finch compose down
+
+# Rebuild and start
+finch compose up --build
+```
+
+### Customizing Configuration
+
+To use different database credentials, edit `docker-compose.yml`:
+
+```yaml
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: your_database
+      POSTGRES_USER: your_user
+      POSTGRES_PASSWORD: your_password
+
+  app:
+    environment:
+      DB_NAME: your_database
+      DB_USER: your_user
+      DB_PASSWORD: your_password
 ```
 
 ## API Examples
@@ -308,7 +464,6 @@ make test
 ## Known Limitations
 
 - Single-threaded HTTP server (no concurrent request handling)
-- Database credentials hardcoded in source code
 - No authentication or authorization
 - HTTP only (no HTTPS/TLS)
 - No rate limiting

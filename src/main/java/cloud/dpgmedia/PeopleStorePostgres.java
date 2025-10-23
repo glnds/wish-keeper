@@ -9,9 +9,13 @@ import java.util.Optional;
 
 public class PeopleStorePostgres {
 
-    private static final String URL = "jdbc:postgresql://localhost:5432/webapp_db";
-    private static final String USER = "geert";
-    private static final String PASSWORD = "gman";
+    // Database connection details from environment variables with defaults
+    private static final String DB_HOST = System.getenv().getOrDefault("DB_HOST", "localhost");
+    private static final String DB_PORT = System.getenv().getOrDefault("DB_PORT", "5432");
+    private static final String DB_NAME = System.getenv().getOrDefault("DB_NAME", "webapp_db");
+    private static final String USER = System.getenv().getOrDefault("DB_USER", "geert");
+    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "gman");
+    private static final String URL = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
 
 
     // I do not like the signature yet
