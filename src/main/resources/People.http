@@ -1,0 +1,82 @@
+### POST request create a NEW person
+POST http://localhost:8000/api/people
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "dateOfBirth": "1990-01-01",
+  "timeOfRegistration": "2023-10-10T14:30:00Z",
+  "addressLocation": {
+    "latitude": 50.8503,
+    "longitude": 4.3517
+  },
+  "behavior": "naughty"
+}
+
+### POST request create a NEW person living on southpole
+POST http://localhost:8000/api/people
+Content-Type: application/json
+
+{
+  "firstName": "inhabitantof",
+  "lastName": "Southpole",
+  "dateOfBirth": "1990-01-01",
+  "timeOfRegistration": "2025-10-10T14:30:00Z",
+  "addressLocation": {
+    "latitude": -90.0000,
+    "longitude": 4.3517
+  },
+  "behavior": "nice"
+}
+
+### PUT request to update a person
+PUT http://localhost:8000/api/people
+Content-Type: application/json
+
+{
+  "id": "2",
+  "firstName": "John",
+  "lastName": "Doechii",
+  "dateOfBirth": "1990-01-01",
+  "timeOfRegistration": "2023-10-10T14:30:00Z",
+  "addressLocation": {
+    "latitude": 50.8503,
+    "longitude": 4.3517
+  },
+  "behavior": "nice",
+  "version": 1
+}
+
+### GET request to fetch all people
+GET http://localhost:8000/api/people
+Accept: application/json
+
+### POST request with invalid data (to test 400 response)
+POST http://localhost:8000/api/people
+Content-Type: application/json
+
+{
+  "invalidField": "value"
+}
+
+
+### POST request to add or update a person with an id returns a 400 since id or version should not be specified
+POST http://localhost:8000/api/people
+Content-Type: application/json
+
+{
+  "id": "1",
+  "firstName": "John",
+  "lastName": "Doezyversion2",
+  "dateOfBirth": "1990-01-01",
+  "timeOfRegistration": "2023-10-10T14:30:00Z",
+  "addressLocation": {
+    "latitude": 50.8503,
+    "longitude": 4.3517
+  },
+  "version": 1
+}
+
+### Unsupported HTTP method (to test 405 response)
+DELETE http://localhost:8000/api/people

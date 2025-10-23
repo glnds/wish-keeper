@@ -1,0 +1,33 @@
+# curl -X POST -H "Content-Type: application/json" -d '{"id":"123","productName":"Laptop","quantity":2}' http://localhost:8000/api/wish
+POST http://localhost:8000/api/wish
+Content-Type: application/json
+
+{"id":"128","productName":"GTA VI","quantity":1, "beneficiaryId":1}
+
+###
+POST http://localhost:8000/api/wish
+Content-Type: application/json
+
+{"id":"666","productName":"GTA VI","quantity":1, "beneficiaryId":40}
+
+###
+GET http://localhost:8000/api/wish
+Content-Type: application/json
+
+###
+PUT http://localhost:8000/api/wishreplace
+Content-Type: application/json
+
+{"id":"128","productName":"pencil","quantity":10, "beneficiaryId":1, "idOfWishToBeReplaced":"126"}
+
+###
+PUT http://localhost:8000/api/wishreplace
+Content-Type: application/json
+
+{"id":"126","productName":"pony","quantity":2, "beneficiaryId":1, "idOfWishToBeReplaced":"128"}
+
+###
+POST http://localhost:8000/api/wishfulfill
+Content-Type: application/json
+
+{"id":"666"}
