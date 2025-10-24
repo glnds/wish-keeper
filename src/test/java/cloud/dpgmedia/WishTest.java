@@ -81,4 +81,34 @@ public class WishTest extends TestCase {
         System.out.println("Parsed Wish id: " + wish.id + " productName: " + wish.productName + " quantity: " + wish.quantity + " beneficiaryId: " + wish.beneficiaryId);
     }
 
+    public void testWishMissingProductName() {
+        try {
+            Wish wish = BasicApi.parseWishFromJson("{\"quantity\":2, \"beneficiaryId\":5}");
+            fail("Should throw exception when productName is missing");
+        } catch (IllegalArgumentException e) {
+            assert e.getMessage().equals("Missing field: productName");
+            System.out.println("Caught expected exception: " + e.getMessage());
+        }
+    }
+
+    public void testWishMissingQuantity() {
+        try {
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"beneficiaryId\":5}");
+            fail("Should throw exception when quantity is missing");
+        } catch (IllegalArgumentException e) {
+            assert e.getMessage().equals("Missing field: quantity");
+            System.out.println("Caught expected exception: " + e.getMessage());
+        }
+    }
+
+    public void testWishMissingBeneficiaryId() {
+        try {
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":2}");
+            fail("Should throw exception when beneficiaryId is missing");
+        } catch (IllegalArgumentException e) {
+            assert e.getMessage().equals("Missing field: beneficiaryId");
+            System.out.println("Caught expected exception: " + e.getMessage());
+        }
+    }
+
 }

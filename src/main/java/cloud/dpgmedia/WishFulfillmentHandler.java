@@ -33,7 +33,10 @@ public class WishFulfillmentHandler implements HttpHandler {
                 Optional<Wish> wishToBeFulfilled = new WishStorePostgres().getWish(wishFulfillment.id);
                 if (wishToBeFulfilled.isEmpty()) {
                     System.out.println("No wish found with id: " + wishFulfillment.id);
-                    exchange.sendResponseHeaders(400, -1);
+                    String errorResponse = String.format("{\"error\":\"No wish found with id: %s\"}", wishFulfillment.id);
+                    exchange.sendResponseHeaders(400, errorResponse.length());
+                    exchange.getResponseBody().write(errorResponse.getBytes());
+                    exchange.getResponseBody().close();
                     return;
                 } else {
                     System.out.println("Found wish to be fulfilled: " + wishToBeFulfilled.get().productName);
@@ -43,9 +46,9 @@ public class WishFulfillmentHandler implements HttpHandler {
                     // calculate distance between person longitude and latitude and north pole
                     if (person.addressLocation == null) {
                         System.out.println("No address location found for person with id: " + person.id);
-                        String response = "No address location found for person with id: " + person.id;
-                        exchange.sendResponseHeaders(500, response.length());
-                        exchange.getResponseBody().write(response.getBytes());
+                        String errorResponse = String.format("{\"error\":\"No address location found for person with id: %d\"}", person.id);
+                        exchange.sendResponseHeaders(400, errorResponse.length());
+                        exchange.getResponseBody().write(errorResponse.getBytes());
                         exchange.getResponseBody().close();
                         return;
                     }

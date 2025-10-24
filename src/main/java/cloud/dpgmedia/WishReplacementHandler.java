@@ -41,7 +41,11 @@ public class WishReplacementHandler implements HttpHandler {
                 Person person = new PeopleStorePostgres().getPerson(replacementWish.beneficiaryId);
                 if (person == null) {
                     System.out.println("No person found with id: " + replacementWish.beneficiaryId);
-                    exchange.sendResponseHeaders(400, -1);
+                    String errorResponse = String.format("{\"error\":\"No person found with id: %d\"}", replacementWish.beneficiaryId);
+                    exchange.sendResponseHeaders(400, errorResponse.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(errorResponse.getBytes());
+                    os.close();
                     return;
                 }
 
@@ -53,7 +57,11 @@ public class WishReplacementHandler implements HttpHandler {
                         .findFirst();
                 if (optionalWish.isEmpty()) {
                     System.out.println("No wish found with id: " + replacementWish.idOfWishToBeReplaced + " for beneficiary id: " + replacementWish.beneficiaryId);
-                    exchange.sendResponseHeaders(400, -1);
+                    String errorResponse = String.format("{\"error\":\"No wish found with id: %s for beneficiary id: %d\"}", replacementWish.idOfWishToBeReplaced, replacementWish.beneficiaryId);
+                    exchange.sendResponseHeaders(400, errorResponse.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(errorResponse.getBytes());
+                    os.close();
                     return;
                 }else {
                     System.out.println("Found wish to be replaced: " + optionalWish.get().productName);
@@ -75,7 +83,11 @@ public class WishReplacementHandler implements HttpHandler {
                 os.close();
             } else {
                 // Respond with a 400 Bad Request for invalid input
-                exchange.sendResponseHeaders(400, -1);
+                String errorResponse = "{\"error\":\"Invalid replacement wish data\"}";
+                exchange.sendResponseHeaders(400, errorResponse.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(errorResponse.getBytes());
+                os.close();
             }
         } else if ("GET".equalsIgnoreCase(method)) { // Handle GET requests to list all wishe
             // Respond with the list of all wishes in JSON format
