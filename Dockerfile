@@ -22,8 +22,8 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Copy the built JAR from builder stage
-COPY --from=builder /app/target/*.jar app.jar
+# Copy the built fat JAR from builder stage (created by Maven Shade Plugin)
+COPY --from=builder /app/target/app.jar app.jar
 
 # Expose the application port
 EXPOSE 8000
