@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 public class WishTest extends TestCase {
     public void testParseWishFromJson() {
         try {
-            Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"Laptop\", \"quantity\":2}");
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":2}");
             fail("a wish without beneficiaryId should throw an exception");
         }catch (Exception e) {
 
@@ -14,7 +14,7 @@ public class WishTest extends TestCase {
 
     public void testWishQuantityCannotBeNegative() {
         try {
-            Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"Laptop\", \"quantity\":-1, \"beneficiaryId\":5}");
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":-1, \"beneficiaryId\":5}");
             fail();
         } catch (IllegalArgumentException e) {
             assert e.getMessage().equals("Wish Quantity cannot be negative");
@@ -24,7 +24,7 @@ public class WishTest extends TestCase {
 
     public void testWishProductNameCannotBeEmpty() {
         try {
-            Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"\", \"quantity\":2, \"beneficiaryId\":5}");
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"\", \"quantity\":2, \"beneficiaryId\":5}");
             fail();
         } catch (IllegalArgumentException e) {
             assert e.getMessage().equals("Wish ProductName cannot be Empty");
@@ -34,7 +34,7 @@ public class WishTest extends TestCase {
 
     public void testWishQuantityCannotBeEmpty() {
         try {
-            Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"Laptop\", \"quantity\":\" \", \"beneficiaryId\":5}");
+            Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":\" \", \"beneficiaryId\":5}");
             fail();
         } catch (IllegalArgumentException e) {
             System.out.println("Caught expected exception: " + e.getMessage());
@@ -44,8 +44,8 @@ public class WishTest extends TestCase {
     }
 
     public void testWishWithSpacesBetweenColons() {
-        Wish wish = BasicApi.parseWishFromJson("{ \"id\" : \"123\" , \"productName\" : \"Laptop\" , \"quantity\" : 2 , \"beneficiaryId\":5 }");
-        assert wish.id.equals("123");
+        Wish wish = BasicApi.parseWishFromJson("{ \"productName\" : \"Laptop\" , \"quantity\" : 2 , \"beneficiaryId\":5 }");
+        assert wish.id != null && !wish.id.isEmpty();
         assert wish.productName.equals("Laptop");
         assert wish.beneficiaryId == 5;
 
@@ -53,8 +53,8 @@ public class WishTest extends TestCase {
     }
 
     public void testWishWithDecimalQuantity() {
-        Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"Laptop\", \"quantity\":2.0, \"beneficiaryId\":5}");
-        assert wish.id.equals("123");
+        Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":2.0, \"beneficiaryId\":5}");
+        assert wish.id != null && !wish.id.isEmpty();
         assert wish.productName.equals("Laptop");
         assert wish.beneficiaryId == 5;
 
@@ -62,8 +62,8 @@ public class WishTest extends TestCase {
     }
 
     public void testWishKeysInDifferentOrder() {
-        Wish wish = BasicApi.parseWishFromJson("{\"quantity\":2,\"id\":\"123\", \"productName\":\"lawnmower\", \"beneficiaryId\":5}");
-        assert wish.id.equals("123");
+        Wish wish = BasicApi.parseWishFromJson("{\"quantity\":2, \"productName\":\"lawnmower\", \"beneficiaryId\":5}");
+        assert wish.id != null && !wish.id.isEmpty();
         assert wish.productName.equals("lawnmower");
         assert wish.quantity == 2;
         assert wish.beneficiaryId == 5;
@@ -72,8 +72,8 @@ public class WishTest extends TestCase {
     }
 
     public void testWishWithExtraKey() {
-        Wish wish = BasicApi.parseWishFromJson("{\"id\":\"123\", \"productName\":\"Laptop\", \"quantity\":2, \"extraKey\":\"extraValue\", \"beneficiaryId\":5}");
-        assert wish.id.equals("123");
+        Wish wish = BasicApi.parseWishFromJson("{\"productName\":\"Laptop\", \"quantity\":2, \"extraKey\":\"extraValue\", \"beneficiaryId\":5}");
+        assert wish.id != null && !wish.id.isEmpty();
         assert wish.productName.equals("Laptop");
         assert wish.quantity == 2;
         assert wish.beneficiaryId == 5;

@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -139,14 +140,17 @@ public class BasicApi {
 
     // Helper method: Parse JSON into an Wish object (manually)
     public static Wish parseWishFromJson(String json) {
-        // Assumes a simple JSON structure like: {"id":"123", "productName":"Laptop", "quantity":2}
+        // Assumes a simple JSON structure like: {"productName":"Laptop", "quantity":2, "beneficiaryId":5}
+        // ID is auto-generated and should not be provided in the request
         try {
-            String id, productName, quantityStr;
+            String productName, quantityStr;
             int beneficiaryId;
             System.out.println("Using jackson");
             ObjectMapper mapper = new ObjectMapper();
 
-            id = mapper.readTree(json).get("id").asText();
+            // Auto-generate ID using UUID
+            String id = UUID.randomUUID().toString();
+
             productName = mapper.readTree(json).get("productName").asText();
             quantityStr = mapper.readTree(json).get("quantity").asText();
 
