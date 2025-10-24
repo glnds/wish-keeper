@@ -80,7 +80,11 @@ public class BasicApi {
                     Person person = new PeopleStorePostgres().getPerson(newWish.beneficiaryId);
                     if (person == null) {
                         System.out.println("No person found with id: " + newWish.beneficiaryId);
-                        exchange.sendResponseHeaders(400, -1);
+                        String errorResponse = String.format("{\"error\":\"No person found with id: %d\"}", newWish.beneficiaryId);
+                        exchange.sendResponseHeaders(400, errorResponse.length());
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(errorResponse.getBytes());
+                        os.close();
                         return;
                     }
 
@@ -91,7 +95,11 @@ public class BasicApi {
                         new WishStorePostgres().storeWish(newWish);
                     } else {
                         System.out.println("Beneficiary " + newWish.beneficiaryId + " already has 3 wishes, cannot add more.");
-                        exchange.sendResponseHeaders(400, -1);
+                        String errorResponse = String.format("{\"error\":\"Beneficiary %d already has 3 wishes, cannot add more\"}", newWish.beneficiaryId);
+                        exchange.sendResponseHeaders(400, errorResponse.length());
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(errorResponse.getBytes());
+                        os.close();
                         return;
                     }
 
@@ -104,7 +112,11 @@ public class BasicApi {
                     os.close();
                 } else {
                     // Respond with a 400 Bad Request for invalid input
-                    exchange.sendResponseHeaders(400, -1);
+                    String errorResponse = "{\"error\":\"Invalid wish data\"}";
+                    exchange.sendResponseHeaders(400, errorResponse.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(errorResponse.getBytes());
+                    os.close();
                 }
             } else if ("GET".equalsIgnoreCase(method)) { // Handle GET requests to list all wishe
                 // Respond with the list of all wishes in JSON format

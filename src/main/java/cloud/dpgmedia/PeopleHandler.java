@@ -48,7 +48,11 @@ public class PeopleHandler implements HttpHandler {
                 os.write(response.getBytes());
                 os.close();
             } else {
-                exchange.sendResponseHeaders(400, -1);
+                String errorResponse = "{\"error\":\"Invalid person data\"}";
+                exchange.sendResponseHeaders(400, errorResponse.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(errorResponse.getBytes());
+                os.close();
             }
         } else if ("GET".equalsIgnoreCase(method)) {
             // Respond with the list of all people in JSON format
