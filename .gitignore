@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings/
+.claude/
 target/
 
 # Environment variables with credentials
