@@ -1,5 +1,5 @@
 CREATE TABLE wishes (
-    id VARCHAR(30) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     productName VARCHAR(120) NOT NULL,
     quantity INTEGER NOT NULL,
     beneficiaryId INTEGER NOT NULL,
