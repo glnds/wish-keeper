@@ -117,12 +117,27 @@ public class WishReplacementHandler implements HttpHandler {
             int beneficiaryId;
             System.out.println("Using jackson");
             ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(json);
 
-            id = mapper.readTree(json).get("id").asText();
-            productName = mapper.readTree(json).get("productName").asText();
-            quantityStr = mapper.readTree(json).get("quantity").asText();
+            JsonNode idNode = rootNode.path("id");
+            if (idNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: id");
+            }
+            id = idNode.asText();
 
-            JsonNode beneficiaryNode = mapper.readTree(json).path("beneficiaryId");
+            JsonNode productNameNode = rootNode.path("productName");
+            if (productNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: productName");
+            }
+            productName = productNameNode.asText();
+
+            JsonNode quantityNode = rootNode.path("quantity");
+            if (quantityNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: quantity");
+            }
+            quantityStr = quantityNode.asText();
+
+            JsonNode beneficiaryNode = rootNode.path("beneficiaryId");
             if (beneficiaryNode.isMissingNode()) {
                 throw new IllegalArgumentException("Missing field: beneficiaryId");
             } else if (!beneficiaryNode.isInt()) {
@@ -130,7 +145,7 @@ public class WishReplacementHandler implements HttpHandler {
             } else {
                 beneficiaryId = beneficiaryNode.asInt();
             }
-            JsonNode replacementNode = mapper.readTree(json).path("idOfWishToBeReplaced");
+            JsonNode replacementNode = rootNode.path("idOfWishToBeReplaced");
             if (replacementNode.isMissingNode()) {
                 throw new IllegalArgumentException("Missing field: idOfWishToBeReplaced");
             } else {

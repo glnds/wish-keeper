@@ -27,9 +27,23 @@ public class PeopleHandlerUtils {
                 throw new IllegalArgumentException("Request body should not contain id or version for registration");
             }
             // Extract necessary fields from the JSON payload
-            String firstName = rootNode.get("firstName").asText();
-            String lastName = rootNode.get("lastName").asText();
-            LocalDate dateOfBirth = LocalDate.parse(rootNode.get("dateOfBirth").asText());
+            JsonNode firstNameNode = rootNode.path("firstName");
+            if (firstNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: firstName");
+            }
+            String firstName = firstNameNode.asText();
+
+            JsonNode lastNameNode = rootNode.path("lastName");
+            if (lastNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: lastName");
+            }
+            String lastName = lastNameNode.asText();
+
+            JsonNode dateOfBirthNode = rootNode.path("dateOfBirth");
+            if (dateOfBirthNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: dateOfBirth");
+            }
+            LocalDate dateOfBirth = LocalDate.parse(dateOfBirthNode.asText());
 
             // Parse nested addressLocation data if available
             JsonNode locationNode = rootNode.get("addressLocation");
@@ -41,7 +55,12 @@ public class PeopleHandlerUtils {
                 // Create Location object with latitude and longitude
                 addressLocationDto = new LocationDto(latitude, longitude);
             }
-            Behavior behavior = Behavior.valueOf(rootNode.get("behavior").asText().toUpperCase());
+
+            JsonNode behaviorNode = rootNode.path("behavior");
+            if (behaviorNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: behavior");
+            }
+            Behavior behavior = Behavior.valueOf(behaviorNode.asText().toUpperCase());
 
             // Create and return the Person object
             return Optional.of(new RegisterPersonDto(firstName, lastName, dateOfBirth, addressLocationDto, behavior));
@@ -61,10 +80,29 @@ public class PeopleHandlerUtils {
             JsonNode rootNode = objectMapper.readTree(body);
 
             // Extract necessary fields from the JSON payload
-            int id = rootNode.get("id").asInt();
-            String firstName = rootNode.get("firstName").asText();
-            String lastName = rootNode.get("lastName").asText();
-            LocalDate dateOfBirth = LocalDate.parse(rootNode.get("dateOfBirth").asText());
+            JsonNode idNode = rootNode.path("id");
+            if (idNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: id");
+            }
+            int id = idNode.asInt();
+
+            JsonNode firstNameNode = rootNode.path("firstName");
+            if (firstNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: firstName");
+            }
+            String firstName = firstNameNode.asText();
+
+            JsonNode lastNameNode = rootNode.path("lastName");
+            if (lastNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: lastName");
+            }
+            String lastName = lastNameNode.asText();
+
+            JsonNode dateOfBirthNode = rootNode.path("dateOfBirth");
+            if (dateOfBirthNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: dateOfBirth");
+            }
+            LocalDate dateOfBirth = LocalDate.parse(dateOfBirthNode.asText());
 
             // Parse nested addressLocation data if available
             JsonNode locationNode = rootNode.get("addressLocation");
@@ -76,8 +114,18 @@ public class PeopleHandlerUtils {
                 // Create Location object with latitude and longitude
                 addressLocationDto = new LocationDto(latitude, longitude);
             }
-            Behavior behavior = Behavior.valueOf(rootNode.get("behavior").asText().toUpperCase());
-            int version = rootNode.get("version").asInt();
+
+            JsonNode behaviorNode = rootNode.path("behavior");
+            if (behaviorNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: behavior");
+            }
+            Behavior behavior = Behavior.valueOf(behaviorNode.asText().toUpperCase());
+
+            JsonNode versionNode = rootNode.path("version");
+            if (versionNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: version");
+            }
+            int version = versionNode.asInt();
 
             return Optional.of(new UpdatePersonDto(id, firstName, lastName, dateOfBirth, addressLocationDto, behavior, version));
         } catch (Exception e) {

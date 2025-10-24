@@ -1,5 +1,6 @@
 package cloud.dpgmedia;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -136,7 +137,12 @@ public class WishFulfillmentHandler implements HttpHandler {
             System.out.println("Using jackson");
             ObjectMapper mapper = new ObjectMapper();
 
-            id = mapper.readTree(json).get("id").asText();
+            JsonNode rootNode = mapper.readTree(json);
+            JsonNode idNode = rootNode.path("id");
+            if (idNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing required field: id");
+            }
+            id = idNode.asText();
 
             return new WishFulfillment(id);
         } catch (Exception e) {
