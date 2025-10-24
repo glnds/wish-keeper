@@ -24,7 +24,18 @@ public class WishReplacementHandler implements HttpHandler {
 
 
             // Manually parse the JSON payload (simple parsing, assumes well-formed input)
-            ReplacementWish replacementWish = parseReplacementWishFromJson(body);
+            ReplacementWish replacementWish;
+            try {
+                replacementWish = parseReplacementWishFromJson(body);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Validation error: " + e.getMessage());
+                String errorResponse = String.format("{\"error\":\"%s\"}", e.getMessage());
+                exchange.sendResponseHeaders(400, errorResponse.length());
+                OutputStream os = exchange.getResponseBody();
+                os.write(errorResponse.getBytes());
+                os.close();
+                return;
+            }
 
             if (replacementWish != null) {
                 Person person = new PeopleStorePostgres().getPerson(replacementWish.beneficiaryId);
