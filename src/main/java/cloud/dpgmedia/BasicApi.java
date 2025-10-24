@@ -151,9 +151,21 @@ public class BasicApi {
             // Auto-generate ID using UUID
             String id = UUID.randomUUID().toString();
 
-            productName = mapper.readTree(json).get("productName").asText();
-            quantityStr = mapper.readTree(json).get("quantity").asText();
+            // Parse and validate productName
+            JsonNode productNameNode = mapper.readTree(json).path("productName");
+            if (productNameNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing field: productName");
+            }
+            productName = productNameNode.asText();
 
+            // Parse and validate quantity
+            JsonNode quantityNode = mapper.readTree(json).path("quantity");
+            if (quantityNode.isMissingNode()) {
+                throw new IllegalArgumentException("Missing field: quantity");
+            }
+            quantityStr = quantityNode.asText();
+
+            // Parse and validate beneficiaryId
             JsonNode beneficiaryNode = mapper.readTree(json).path("beneficiaryId");
             if (beneficiaryNode.isMissingNode()) {
                 throw new IllegalArgumentException("Missing field: beneficiaryId");
